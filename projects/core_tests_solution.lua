@@ -33,8 +33,6 @@ project_defaults = {
     "EnableSSE2",
     "ExtraWarnings",
     "FloatFast",
-    "NoExceptions", -- deprecated
-    "NoRTTI", -- deprecated
   },
 
   defines = {
@@ -46,12 +44,9 @@ project_defaults = {
   },
 
   defines_windows = {
-    "_HAS_EXCEPTIONS=0",
     "_CRT_NO_WARNINGS",
   },
 
-  exceptions = false,
-  rtti = false,
 }
 
 -- Generates the premake code calls.
