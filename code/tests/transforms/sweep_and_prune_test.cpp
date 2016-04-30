@@ -23,6 +23,7 @@ TEST_CASE("Sweep and Prune removes overlapping aabbs")
                            Core::Entity_id{5,5},
                            Core::Entity_id{6,6}}; 
 
+
   SECTION("Sweep should pickup all entites")
   {
     const math::aabb bounding[number_of_boundings] = {
@@ -47,11 +48,9 @@ TEST_CASE("Sweep and Prune removes overlapping aabbs")
       for(uint32_t j = 0; j < number_of_boundings; ++j)
       {
         REQUIRE(curr_axis[j].center == (j * -0.5f));
-        REQUIRE(curr_axis[j].half_extent == (j * -0.5f));
+        REQUIRE(curr_axis[j].half_extent == (j * 0.5f));
       }
     }
-
-    
   }
 
 
@@ -71,16 +70,60 @@ TEST_CASE("Sweep and Prune removes overlapping aabbs")
                                          number_of_boundings);
 
     Physics::Broadphase::Prune prune;
-    Physics::Broadphase::prune_init(&prune, number_of_boundings);
-
+    Physics::Broadphase::prune_init(&prune, &sweep);
     Physics::Broadphase::prune_calculate(&prune, &sweep);
+    Physics::Broadphase::prune_free(&prune);
     
     REQUIRE(prune.size == number_of_boundings);
   }
 
-
-  SECTION("Prune should pull some entities")
+  SECTION("Prune should pull top entities")
   {
+    const math::aabb bounding[number_of_boundings] = {
+      math::aabb_init(math::vec3_init(-16,-16,-16), math::vec3_init(-15,-15,-15)),  // should prune
+      math::aabb_init(math::vec3_init(-18,-18,-18), math::vec3_init(-17,-17,-17)),  // should prune
+      math::aabb_init(math::vec3_init(-20,-20,-20), math::vec3_init(-19,-19,-19)),  // should prune
+    
+      math::aabb_init(math::vec3_init(-10,-10,-10), math::vec3_init(-8,-8,-8)),     // should not prune
+      math::aabb_init(math::vec3_init(-11,-11,-11), math::vec3_init(-9,-9,-9)),     // should not prune
+      math::aabb_init(math::vec3_init(-12,-12,-12), math::vec3_init(-10,-10,-10)),  // should not prune
+    };
+    
+    Physics::Broadphase::sweep_calculate(&sweep,
+                                         bounding, 
+                                         number_of_boundings);
+
+    Physics::Broadphase::Prune prune;
+    Physics::Broadphase::prune_init(&prune, &sweep);
+    Physics::Broadphase::prune_calculate(&prune, &sweep);
+    Physics::Broadphase::prune_free(&prune);
+    
+    REQUIRE(prune.size == 3);
+  }
+
+
+  SECTION("Prune should pull bottom entities")
+  {
+    const math::aabb bounding[number_of_boundings] = {
+      math::aabb_init(math::vec3_init(-10,-10,-10), math::vec3_init(-8,-8,-8)),     // should not prune
+      math::aabb_init(math::vec3_init(-11,-11,-11), math::vec3_init(-9,-9,-9)),     // should not prune
+      math::aabb_init(math::vec3_init(-12,-12,-12), math::vec3_init(-10,-10,-10)),  // should not prune
+      
+      math::aabb_init(math::vec3_init(-16,-16,-16), math::vec3_init(-15,-15,-15)),  // should prune
+      math::aabb_init(math::vec3_init(-18,-18,-18), math::vec3_init(-17,-17,-17)),  // should prune
+      math::aabb_init(math::vec3_init(-20,-20,-20), math::vec3_init(-19,-19,-19)),  // should prune
+    };
+    
+    Physics::Broadphase::sweep_calculate(&sweep,
+                                         bounding, 
+                                         number_of_boundings);
+
+    Physics::Broadphase::Prune prune;
+    Physics::Broadphase::prune_init(&prune, &sweep);
+    Physics::Broadphase::prune_calculate(&prune, &sweep);
+    Physics::Broadphase::prune_free(&prune);
+    
+    REQUIRE(prune.size == 3);
   }
 
 
@@ -100,12 +143,12 @@ TEST_CASE("Sweep and Prune removes overlapping aabbs")
                                          number_of_boundings);
 
     Physics::Broadphase::Prune prune;
-    Physics::Broadphase::prune_init(&prune, number_of_boundings);
-
+    Physics::Broadphase::prune_init(&prune, &sweep);
     Physics::Broadphase::prune_calculate(&prune, &sweep);
+    Physics::Broadphase::prune_free(&prune);
     
     REQUIRE(prune.size == 0);
   }
-
-
+  
+  Physics::Broadphase::sweep_free(&sweep);
 }
